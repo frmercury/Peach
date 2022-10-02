@@ -28,7 +28,7 @@ public abstract class BaseTest {
 
     @BeforeTest(alwaysRun = true, description = "Browser session created")
     protected void initWebDriver() {
-        driver = WebDriverManagerClass.getWebDriver();
+        open(baseUrl);
         log.info("Browser is opened");
     }
 
