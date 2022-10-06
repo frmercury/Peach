@@ -1,5 +1,6 @@
 package api;
 
+import com.codeborne.selenide.Configuration;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -8,10 +9,7 @@ import org.openqa.selenium.opera.OperaOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.*;
 import pages.WebDriverManagerClass;
 
 import java.net.MalformedURLException;
@@ -34,35 +32,22 @@ public abstract class BaseTest {
 
     public void initProps() {
 
-        DesiredCapabilities caps = new DesiredCapabilities();
-
         //browser settings
         browser = getProperty("browser");
         baseUrl = loadProperty("app.url");
-        browserSize = "1920x1080";
-
-        if (getProperty("env", "daily").toLowerCase(Locale.ROOT).equals("stage")) {
-            caps.setCapability("browser", getProperty("browser").toLowerCase(Locale.ROOT));
-        }
-
-        browserCapabilities = caps;
     }
 
     @BeforeMethod
-    protected synchronized void initWebBrowser(Object[] params) throws MalformedURLException {
-
+    protected void initWebBrowser() {
 
         DesiredCapabilities newCaps = new DesiredCapabilities();
 
-        if (getProperty("env", "daily").toLowerCase(Locale.ROOT)
-                .equals("stage")) {
             switch (browser.toLowerCase(Locale.ROOT)) {
                 case "chrome" -> {
-                    ChromeOptions options = new ChromeOptions();
-                    options.addArguments("--incognito");
-                    options.addArguments("--log-level=3");
-                    options.addArguments("--ignore-certificate-errors");
-                    newCaps.setCapability(ChromeOptions.CAPABILITY, options);
+                    ChromeOptions chromeOptions = new ChromeOptions();
+                    chromeOptions.addArguments("--incognito");
+                    chromeOptions.addArguments("--start-maximized");
+                    newCaps.setCapability(ChromeOptions.CAPABILITY, chromeOptions);
                 }
                 case "firefox" -> {
                     FirefoxProfile profile = new FirefoxProfile();
@@ -73,18 +58,11 @@ public abstract class BaseTest {
                 }
                 default -> newCaps.setCapability("mode", "incognito");
             }
-        } else {
-                browserCapabilities.merge(newCaps);
-            }
-    }
-
-    @BeforeTest(alwaysRun = true, description = "Browser session created")
-    protected void initWebDriver() {
+        browserCapabilities = newCaps;
         open(baseUrl);
-        log.info("Browser is opened");
     }
 
-    @AfterTest(alwaysRun = true, description = "End browser session")
+    @AfterMethod(alwaysRun = true, description = "End browser session")
     public void closeWebBrowser() {
         log.info("Browser is closed");
         driver.quit();
